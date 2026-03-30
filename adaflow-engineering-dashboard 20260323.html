@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Adaflow — Dashboard de Engenharia · Março 2026</title>
+<style>
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f5f4f0;
+  --bg-tertiary: #eeecea;
+  --text-primary: #2c2c2a;
+  --text-secondary: #5f5e5a;
+  --text-tertiary: #888780;
+  --border: rgba(0,0,0,0.12);
+  --border-md: rgba(0,0,0,0.20);
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-primary: #1e1e1c;
+    --bg-secondary: #2a2a28;
+    --bg-tertiary: #333330;
+    --text-primary: #e8e6de;
+    --text-secondary: #b4b2a9;
+    --text-tertiary: #888780;
+    --border: rgba(255,255,255,0.10);
+    --border-md: rgba(255,255,255,0.18);
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg-tertiary);color:var(--text-primary);padding:24px 16px;min-height:100vh}
+.container{max-width:900px;margin:0 auto}
+.header{margin-bottom:24px}
+.header h1{font-size:20px;font-weight:500;color:var(--text-primary)}
+.header p{font-size:13px;color:var(--text-secondary);margin-top:4px}
+.tabs{display:flex;gap:4px;margin-bottom:1.5rem;border-bottom:0.5px solid var(--border);padding-bottom:0}
+.tab-btn{padding:8px 16px;font-size:13px;font-weight:500;border:none;background:none;color:var(--text-secondary);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-0.5px;transition:color 0.15s;font-family:var(--font)}
+.tab-btn.active{color:var(--text-primary);border-bottom:2px solid #185FA5}
+.tab-btn:hover:not(.active){color:var(--text-primary)}
+.tab-pane{display:none}.tab-pane.active{display:block}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:1.5rem}
+.kpi-grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:1.5rem}
+@media(max-width:600px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.kpi-grid-2{grid-template-columns:1fr}}
+.kpi{background:var(--bg-secondary);border-radius:var(--radius-md);padding:0.875rem 1rem}
+.kpi-label{font-size:12px;color:var(--text-secondary);margin-bottom:4px}
+.kpi-value{font-size:22px;font-weight:500;line-height:1.2}
+.kpi-sub{font-size:11px;color:var(--text-tertiary);margin-top:2px}
+.section-title{font-size:11px;font-weight:500;color:var(--text-secondary);margin:1.25rem 0 0.75rem;text-transform:uppercase;letter-spacing:0.06em}
+.chart-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:1rem}
+@media(max-width:600px){.chart-row{grid-template-columns:1fr}}
+.chart-box{background:var(--bg-primary);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:1rem}
+.chart-box-full{background:var(--bg-primary);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:1rem;margin-bottom:1rem}
+.chart-title{font-size:12px;font-weight:500;color:var(--text-secondary);margin-bottom:0.75rem}
+.mini-table{width:100%;font-size:11px;border-collapse:collapse;margin-top:10px;border-top:0.5px solid var(--border);padding-top:0}
+.mini-table td{padding:4px 4px;color:var(--text-secondary)}
+.mini-table tr:first-child td{font-weight:500;padding-top:10px}
+.mini-table td:last-child{text-align:right;font-weight:500;color:var(--text-primary)}
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:8px;font-size:11px;color:var(--text-secondary)}
+.legend span{display:flex;align-items:center;gap:4px}
+.legend-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+.alert{border-radius:var(--radius-md);padding:10px 14px;font-size:12px;margin-bottom:1rem;display:flex;gap:8px;align-items:flex-start}
+.alert-red{background:#FCEBEB;color:#791F1F;border:0.5px solid #F7C1C1}
+.alert-yellow{background:#FAEEDA;color:#633806;border:0.5px solid #FAC775}
+.alert-blue{background:#E6F1FB;color:#0C447C;border:0.5px solid #B5D4F4}
+@media(prefers-color-scheme:dark){
+  .alert-red{background:#3a1010;color:#F09595;border-color:#791F1F}
+  .alert-yellow{background:#2e1f00;color:#EF9F27;border-color:#854F0B}
+  .alert-blue{background:#042C53;color:#85B7EB;border-color:#185FA5}
+}
+.highlights{background:var(--bg-secondary);border-radius:var(--radius-md);padding:1rem;margin-top:1rem}
+.hl-title{font-size:11px;font-weight:500;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px}
+.hl-item{font-size:12px;color:var(--text-secondary);padding:4px 0;border-bottom:0.5px solid var(--border)}
+.hl-item:last-child{border-bottom:none}
+.hl-item b{color:var(--text-primary);font-weight:500}
+.pending-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:0.5rem}
+.pending-table th{text-align:left;font-size:11px;font-weight:500;color:var(--text-secondary);padding:6px 8px;border-bottom:0.5px solid var(--border)}
+.pending-table td{padding:6px 8px;border-bottom:0.5px solid var(--border);color:var(--text-primary);vertical-align:top}
+.pending-table tr:last-child td{border-bottom:none}
+.tag{display:inline-block;font-size:10px;font-weight:500;padding:2px 7px;border-radius:var(--radius-md);white-space:nowrap}
+.tag-done{background:#E1F5EE;color:#085041}
+.tag-acoes{background:#EAF3DE;color:#27500A}
+.tag-inprog{background:#E6F1FB;color:#0C447C}
+.tag-triaged{background:#FAEEDA;color:#633806}
+.tag-todo,.tag-open{background:#F1EFE8;color:#444441}
+.tag-blocked{background:#FCEBEB;color:#791F1F}
+.tag-backlog{background:#FBEAF0;color:#72243E}
+.tag-bug{background:#FCEBEB;color:#791F1F}
+.tag-melhoria{background:#E6F1FB;color:#0C447C}
+.tag-suporte{background:#E1F5EE;color:#085041}
+.tag-duvida{background:#FAEEDA;color:#633806}
+.var-pos{color:#1D9E75;font-weight:500}
+.var-neg{color:#A32D2D;font-weight:500}
+.overflow-x{overflow-x:auto}
+.generated{font-size:11px;color:var(--text-tertiary);text-align:right;margin-top:24px}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>Dashboard de Engenharia — Adaflow</h1>
+    <p>Tickets · Março 2026 · Dados extraídos do Notion em 30/03/2026</p>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('t1',this)">Semana anterior</button>
+    <button class="tab-btn" onclick="switchTab('t2',this)">Março 2026</button>
+    <button class="tab-btn" onclick="switchTab('t3',this)">Comparativo mensal</button>
+  </div>
+
+  <div id="t1" class="tab-pane active"></div>
+  <div id="t2" class="tab-pane"></div>
+  <div id="t3" class="tab-pane"></div>
+
+  <p class="generated">Gerado em 30/03/2026 · Adaflow Engineering Dashboard</p>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
+<script>
+Chart.register(ChartDataLabels);
+
+const isDark = matchMedia('(prefers-color-scheme: dark)').matches;
+const gridC = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)';
+const labelC = isDark ? '#b4b2a9' : '#5f5e5a';
+const textC = isDark ? '#e8e6de' : '#2c2c2a';
+
+const TIPO_C = {'Bug':'#E24B4A','Melhoria':'#378ADD','Solicitação de Suporte':'#1D9E75','Dúvida Interna':'#BA7517','–':'#888780'};
+const STAT_C = {'In-progress':'#185FA5','To Do':'#5F5E5A','Open':'#888780','Triaged':'#BA7517','Blocked':'#A32D2D','Backlog p/ Pitchs':'#D4537E'};
+const PRIO_C = {'Crítico':'#A32D2D','Alto':'#E24B4A','Médio':'#BA7517','Baixo':'#1D9E75','–':'#888780'};
+const TIME_P = ['#534AB7','#0F6E56','#993C1D','#185FA5','#854F0B','#3B6D11','#888780'];
+const PROD_P = ['#534AB7','#0F6E56','#993C1D','#185FA5','#854F0B','#3B6D11','#BA7517'];
+const FEAT_P = ['#534AB7','#0F6E56','#993C1D','#185FA5','#854F0B','#3B6D11','#BA7517','#E24B4A','#888780','#D4537E','#1D9E75','#5DCAA5','#EF9F27'];
+
+const CONCLUIDO = s => s === 'Done' || s === 'Ações Concluídas';
+const ABERTO = s => !CONCLUIDO(s) && s !== 'Backlog p/ Pitchs';
+
+const tickets = [
+{"Nome":"Solicitação de validação - Automação para emissão de NF","Tipo":"Dúvida Interna","Feature":"NFSe","Status":"Done","Time":"CS","Produto":"WebApp","Prioridade":"–","Criação":"2026-02-26"},
+{"Nome":"Problema na conexão Open Finance Nubank","Tipo":"Bug","Feature":"Open Finance","Status":"To Do","Time":"CS","Produto":"WebApp","Prioridade":"–","Criação":"2026-03-25"},
+{"Nome":"Atualização de Copy de Email - IRPF","Tipo":"Solicitação de Suporte","Feature":"E-mails","Status":"To Do","Time":"Financeiro","Produto":"BackOffice","Prioridade":"–","Criação":"2026-03-25"},
+{"Nome":"Reajuste de Planos","Tipo":"Solicitação de Suporte","Feature":"Migração de Plano","Status":"To Do","Time":"Financeiro","Produto":"BackOffice","Prioridade":"Alto","Criação":"2026-03-26"},
+{"Nome":"Informações Solicitadas no Invoice","Tipo":"Melhoria","Feature":"Invoice","Status":"Triaged","Time":"CS","Produto":"WebApp","Prioridade":"Baixo","Criação":"2026-03-27"},
+{"Nome":"Revisão ADAFLOWRUN","Tipo":"Solicitação de Suporte","Feature":"Site","Status":"Triaged","Time":"–","Produto":"Ferramentas Internas","Prioridade":"Alto","Criação":"2026-03-30"},
+{"Nome":"Adicionar ícone de novidades na Barra de Menu","Tipo":"Melhoria","Feature":"menu","Status":"Triaged","Time":"–","Produto":"WebApp","Prioridade":"Baixo","Criação":"2026-03-26"},
+{"Nome":"Verificar o que ocorreu no retorno da Procuração de Abertura","Tipo":"Bug","Feature":"Onboarding","Status":"Done","Time":"BackOffice","Produto":"WebApp","Prioridade":"Baixo","Criação":"2026-03-27"},
+{"Nome":"Adicionar TRT ao Fluxo da IdWall","Tipo":"Melhoria","Feature":"IdWall","Status":"Triaged","Time":"–","Produto":"Ferramentas Internas","Prioridade":"Médio","Criação":"2026-03-27"},
+{"Nome":"Trackings Certificado Digital no PostHog","Tipo":"Solicitação de Suporte","Feature":"Certificado Digital","Status":"Triaged","Time":"–","Produto":"WebApp","Prioridade":"Médio","Criação":"2026-03-27"},
+{"Nome":"Contas Open Finance Desatualizada","Tipo":"Solicitação de Suporte","Feature":"Open Finance","Status":"Done","Time":"BackOffice","Produto":"WebApp","Prioridade":"Alto","Criação":"2026-03-27"},
+{"Nome":"Ajuste do Plano Contratação","Tipo":"Solicitação de Suporte","Feature":"Onboarding","Status":"Done","Time":"Sales","Produto":"BackOffice","Prioridade":"Alto","Criação":"2026-03-27"},
+{"Nome":"Implementação de banner de consentimento de cookies","Tipo":"Melhoria","Feature":"Políticas de uso","Status":"To Do","Time":"–","Produto":"WebApp","Prioridade":"Alto","Criação":"2026-03-27"},
+{"Nome":"Excluir conta bancária webapp","Tipo":"Solicitação de Suporte","Feature":"–","Status":"Done","Time":"–","Produto":"–","Prioridade":"Médio","Criação":"2026-03-26"},
+{"Nome":"Funcionamento Atualização Extratos Open Finance","Tipo":"Dúvida Interna","Feature":"Open Finance","Status":"Triaged","Time":"Product/Tech","Produto":"WebApp","Prioridade":"Médio","Criação":"2026-03-27"},
+{"Nome":"Divergência de instruções na tela de autenticação","Tipo":"Melhoria","Feature":"Infraestrutura","Status":"Triaged","Time":"Product/Tech","Produto":"WebApp","Prioridade":"Baixo","Criação":"2026-03-26"},
+{"Nome":"OPEN FINANCE – C6 incompleto","Tipo":"Bug","Feature":"Open Finance","Status":"Backlog p/ Pitchs","Time":"BackOffice","Produto":"WebApp","Prioridade":"Médio","Criação":"2026-03-06"},
+{"Nome":"Correção Abertura de Empresa","Tipo":"Solicitação de Suporte","Feature":"Onboarding","Status":"Backlog p/ Pitchs","Time":"BackOffice","Produto":"BackOffice","Prioridade":"Crítico","Criação":"2026-03-25"},
+{"Nome":"Erro ao acessar BackOffice","Tipo":"Solicitação de Suporte","Feature":"–","Status":"Done","Time":"Product/Tech","Produto":"–","Prioridade":"Médio","Criação":"2026-03-25"},
+{"Nome":"Transferência de pagamento","Tipo":"Solicitação de Suporte","Feature":"Migração de Plano","Status":"Done","Time":"Sales","Produto":"WebApp","Prioridade":"Médio","Criação":"2026-03-25"},
+{"Nome":"Liberação do banco Wise OFX","Tipo":"Dúvida Interna","Feature":"Open Finance","Status":"Ações Concluídas","Time":"CS","Produto":"WebApp","Prioridade":"–","Criação":"2026-02-27"},
+{"Nome":"Criação de API para identificação do cliente na Cloud Human","Tipo":"Solicitação de Suporte","Feature":"Claude Human","Status":"Done","Time":"CS","Produto":"Ferramentas Internas","Prioridade":"Alto","Criação":"2026-03-16"},
+{"Nome":"Correção ortográfica","Tipo":"Melhoria","Feature":"Impostos","Status":"Ações Concluídas","Time":"Marketing","Produto":"WebApp","Prioridade":"Baixo","Criação":"2026-03-11"},
+{"Nome":"Relatório empresas que contribuem com o teto CLT","Tipo":"Melhoria","Feature":"Pro-Labore","Status":"Ações Concluídas","Time":"BackOffice","Produto":"BackOffice","Prioridade":"Alto","Criação":"2026-03-17"},
+{"Nome":"Adição de filtro na Aba de Empresas","Tipo":"Melhoria","Feature":"Cadastro Empresas","Status":"Ações Concluídas","Time":"BackOffice","Produto":"BackOffice","Prioridade":"Baixo","Criação":"2026-03-12"},
+{"Nome":"Adicionar cidade/estado na Exportação do BackOffice","Tipo":"Melhoria","Feature":"Relatórios","Status":"Ações Concluídas","Time":"BackOffice","Produto":"BackOffice","Prioridade":"Médio","Criação":"2026-03-25"},
+{"Nome":"Adicionar nas Tarefas Recorrentes do BackOffice a EFD e Parcelamento","Tipo":"Melhoria","Feature":"Tarefas Recorrentes","Status":"Ações Concluídas","Time":"BackOffice","Produto":"BackOffice","Prioridade":"Baixo","Criação":"2026-03-25"},
+{"Nome":"Melhoria Msg de Email NF Mensal","Tipo":"Melhoria","Feature":"NF Adaflow","Status":"Ações Concluídas","Time":"CS","Produto":"Ferramentas Internas","Prioridade":"Médio","Criação":"2026-03-17"},
+{"Nome":"Propagação da UTM para os cliques seguintes","Tipo":"Melhoria","Feature":"Site","Status":"Ações Concluídas","Time":"Marketing","Produto":"Site","Prioridade":"Alto","Criação":"2026-03-18"},
+{"Nome":"Sugestão de melhoria – variável automática de mês/ano na descrição de notas recorrentes","Tipo":"Melhoria","Feature":"NFSe","Status":"Ações Concluídas","Time":"CS","Produto":"WebApp","Prioridade":"Baixo","Criação":"2026-03-12"},
+{"Nome":"Falha no envio do informe de rendimentos","Tipo":"Melhoria","Feature":"Informe de Rendimentos","Status":"Ações Concluídas","Time":"BackOffice","Produto":"BackOffice","Prioridade":"Alto","Criação":"2026-03-18"},
+{"Nome":"Ajuste de pagamento onboarding incorreto (abertura → migração)","Tipo":"Solicitação de Suporte","Feature":"Onboarding","Status":"Ações Concluídas","Time":"Financeiro","Produto":"BackOffice","Prioridade":"Alto","Criação":"2026-03-17"},
+{"Nome":"Débito marcado como pago no app.","Tipo":"Melhoria","Feature":"Impostos","Status":"Ações Concluídas","Time":"BackOffice","Produto":"WebApp","Prioridade":"Baixo","Criação":"2026-03-04"},
+{"Nome":"Invoice com valores zerados","Tipo":"Melhoria","Feature":"Invoice","Status":"Ações Concluídas","Time":"BackOffice","Produto":"WebApp","Prioridade":"Baixo","Criação":"2026-03-05"},
+{"Nome":"Possibilidade de múltiplas séries de NFS por cliente","Tipo":"Melhoria","Feature":"NFSe","Status":"Backlog p/ Pitchs","Time":"Product/Tech","Produto":"WebApp","Prioridade":"Baixo","Criação":"2026-03-16"},
+{"Nome":"Melhoria no Envio de Documentos Iniciais — Automação via Plataforma","Tipo":"Melhoria","Feature":"Onboarding","Status":"Backlog p/ Pitchs","Time":"BackOffice","Produto":"WebApp","Prioridade":"Médio","Criação":"2026-03-24"},
+{"Nome":"Informe de Rendimentos com Dados Incompletos por Desconexão Open Finance","Tipo":"Bug","Feature":"Open Finance","Status":"Open","Time":"Product/Tech","Produto":"WebApp","Prioridade":"Médio","Criação":"2026-03-25"},
+{"Nome":"Atualizar Ticket de Churn","Tipo":"Solicitação de Suporte","Feature":"Cancelamento de Assinatura","Status":"Triaged","Time":"CS","Produto":"WebApp","Prioridade":"Alto","Criação":"2026-03-25"},
+{"Nome":"Verificar por qual motivo o certificado digital atual não está sincronizando","Tipo":"Bug","Feature":"Certificado Digital","Status":"To Do","Time":"BackOffice","Produto":"BackOffice","Prioridade":"Médio","Criação":"2026-03-16"},
+{"Nome":"Revisão da Régua de e-mail Renovação de Certificado","Tipo":"Melhoria","Feature":"Certificado Digital","Status":"To Do","Time":"CS","Produto":"BackOffice","Prioridade":"Médio","Criação":"2026-03-12"},
+{"Nome":"Ajuste do Plano Contratação (2)","Tipo":"Solicitação de Suporte","Feature":"Onboarding","Status":"Done","Time":"Sales","Produto":"BackOffice","Prioridade":"Médio","Criação":"2026-03-24"},
+{"Nome":"Correção - Estado Civil","Tipo":"Solicitação de Suporte","Feature":"Onboarding","Status":"Done","Time":"Sales","Produto":"WebApp","Prioridade":"Médio","Criação":"2026-03-24"},
+{"Nome":"Acesso BKO","Tipo":"Solicitação de Suporte","Feature":"Acesso Interno","Status":"Done","Time":"CS","Produto":"BackOffice","Prioridade":"Médio","Criação":"2026-03-11"},
+{"Nome":"Acesso Full ao BackOffice","Tipo":"Solicitação de Suporte","Feature":"Acesso Interno","Status":"Done","Time":"Complience","Produto":"BackOffice","Prioridade":"Alto","Criação":"2026-03-12"},
+{"Nome":"Erro ao acessar a plataforma Adaflow","Tipo":"Bug","Feature":"Acesso Cliente (login)","Status":"Done","Time":"CS","Produto":"WebApp","Prioridade":"Alto","Criação":"2026-03-19"},
+{"Nome":"Usuário não consegue acessar a conta","Tipo":"Bug","Feature":"Acesso Cliente (login)","Status":"Done","Time":"BackOffice","Produto":"WebApp","Prioridade":"Crítico","Criação":"2026-03-19"},
+{"Nome":"Criar acesso de login","Tipo":"Solicitação de Suporte","Feature":"Acesso Cliente (login)","Status":"Done","Time":"CS","Produto":"WebApp","Prioridade":"Médio","Criação":"2026-03-18"},
+{"Nome":"Erro ao acessar a plataforma","Tipo":"Bug","Feature":"Acesso Cliente (login)","Status":"Done","Time":"CS","Produto":"WebApp","Prioridade":"Médio","Criação":"2026-03-09"},
+{"Nome":"Cliente não consegue logar","Tipo":"Bug","Feature":"Acesso Cliente (login)","Status":"Done","Time":"CS","Produto":"WebApp","Prioridade":"–","Criação":"2026-02-26"},
+{"Nome":"Novo Usuário - IdWall","Tipo":"Solicitação de Suporte","Feature":"Acesso Interno","Status":"Done","Time":"Complience","Produto":"Ferramentas Internas","Prioridade":"Médio","Criação":"2026-03-11"},
+{"Nome":"Acesso conta corporativ","Tipo":"Solicitação de Suporte","Feature":"Acesso Interno","Status":"Done","Time":"Marketing","Produto":"Ferramentas Internas","Prioridade":"Alto","Criação":"2026-03-16"},
+{"Nome":"Acesso conta corporativa (2)","Tipo":"Solicitação de Suporte","Feature":"Acesso Interno","Status":"Done","Time":"Marketing","Produto":"Ferramentas Internas","Prioridade":"Alto","Criação":"2026-03-16"},
+{"Nome":"Acesso conta corporativa (3)","Tipo":"Solicitação de Suporte","Feature":"Acesso Interno","Status":"Done","Time":"Marketing","Produto":"Ferramentas Internas","Prioridade":"Alto","Criação":"2026-03-16"},
+{"Nome":"Atualização de Permissão GTM","Tipo":"Solicitação de Suporte","Feature":"Acesso Interno","Status":"Done","Time":"Marketing","Produto":"Ferramentas Internas","Prioridade":"Médio","Criação":"2026-03-18"},
+{"Nome":"Sem acesso ao GSuite","Tipo":"Solicitação de Suporte","Feature":"Acesso Interno","Status":"Done","Time":"–","Produto":"Ferramentas Internas","Prioridade":"–","Criação":"2026-03-23"},
+{"Nome":"Não consigo logar google adaflow","Tipo":"Solicitação de Suporte","Feature":"Acesso Interno","Status":"Done","Time":"CS","Produto":"Ferramentas Internas","Prioridade":"Alto","Criação":"2026-03-23"},
+{"Nome":"Atualização IRPF 2026","Tipo":"Solicitação de Suporte","Feature":"IRPF","Status":"Done","Time":"Financeiro","Produto":"WebApp","Prioridade":"–","Criação":"2026-03-16"},
+{"Nome":"Problema de conexão Open Finance XP","Tipo":"Solicitação de Suporte","Feature":"Open Finance","Status":"Done","Time":"CS","Produto":"WebApp","Prioridade":"–","Criação":"2026-02-24"},
+{"Nome":"OPEN FINANCE – Bradesco incompleto","Tipo":"Solicitação de Suporte","Feature":"Open Finance","Status":"Done","Time":"BackOffice","Produto":"WebApp","Prioridade":"Alto","Criação":"2026-03-05"},
+{"Nome":"Conexão Open Finance Inter","Tipo":"Solicitação de Suporte","Feature":"Open Finance","Status":"To Do","Time":"CS","Produto":"WebApp","Prioridade":"–","Criação":"2026-03-19"},
+{"Nome":"Ajuste - Plano de contratação","Tipo":"Solicitação de Suporte","Feature":"Onboarding","Status":"Done","Time":"Sales","Produto":"BackOffice","Prioridade":"Alto","Criação":"2026-03-23"},
+{"Nome":"Desativar autenticação 2F","Tipo":"Solicitação de Suporte","Feature":"2FA","Status":"Done","Time":"CS","Produto":"WebApp","Prioridade":"Crítico","Criação":"2026-03-20"},
+{"Nome":"Ajuste - Plano de contratação (2)","Tipo":"Solicitação de Suporte","Feature":"Onboarding","Status":"Done","Time":"Sales","Produto":"BackOffice","Prioridade":"Alto","Criação":"2026-03-20"},
+{"Nome":"Ajuste de Empresa → Abertura","Tipo":"Solicitação de Suporte","Feature":"Onboarding","Status":"Done","Time":"BackOffice","Produto":"BackOffice","Prioridade":"Crítico","Criação":"2026-03-20"},
+{"Nome":"Analise IdWall","Tipo":"Solicitação de Suporte","Feature":"Onboarding","Status":"Triaged","Time":"–","Produto":"Ferramentas Internas","Prioridade":"Alto","Criação":"2026-03-17"},
+{"Nome":"Atribuir Adacoins para quem indicou amigos em fevereiro","Tipo":"Solicitação de Suporte","Feature":"Adafriends","Status":"Done","Time":"Marketing","Produto":"WebApp","Prioridade":"–","Criação":"2026-03-13"},
+{"Nome":"Dashboard Acompanhamento Adafriends/MGM","Tipo":"Solicitação de Suporte","Feature":"Adafriends","Status":"Done","Time":"Marketing","Produto":"Dashboard","Prioridade":"Médio","Criação":"2026-03-12"},
+{"Nome":"Criar acesso para sócio","Tipo":"Solicitação de Suporte","Feature":"Usuários","Status":"Done","Time":"CS","Produto":"WebApp","Prioridade":"Médio","Criação":"2026-03-11"},
+{"Nome":"Atualizar faturamento","Tipo":"Solicitação de Suporte","Feature":"Onboarding","Status":"Done","Time":"Sales","Produto":"BackOffice","Prioridade":"Alto","Criação":"2026-03-11"},
+{"Nome":"Limpar/resetar o cadastro na base.","Tipo":"Solicitação de Suporte","Feature":"Onboarding","Status":"Done","Time":"Sales","Produto":"BackOffice","Prioridade":"Alto","Criação":"2026-03-11"},
+{"Nome":"Desativar 2fa","Tipo":"Solicitação de Suporte","Feature":"2FA","Status":"Done","Time":"CS","Produto":"WebApp","Prioridade":"Alto","Criação":"2026-03-09"},
+{"Nome":"Atualizar link dos termos de uso no site","Tipo":"Solicitação de Suporte","Feature":"Site","Status":"Done","Time":"Product/Tech","Produto":"Site","Prioridade":"Médio","Criação":"2026-03-09"},
+{"Nome":"Remover extrato pendente da tela do webapp","Tipo":"Solicitação de Suporte","Feature":"Contas Bancárias","Status":"Done","Time":"CS","Produto":"WebApp","Prioridade":"Médio","Criação":"2026-03-09"},
+{"Nome":"Ateração Onboarding migração para Abertura de CNPJ.","Tipo":"Solicitação de Suporte","Feature":"Onboarding","Status":"Done","Time":"Sales","Produto":"BackOffice","Prioridade":"Alto","Criação":"2026-03-05"},
+{"Nome":"Criação de API no Intercom para Migração de Histórico","Tipo":"Solicitação de Suporte","Feature":"Claude Human","Status":"Triaged","Time":"CS","Produto":"Ferramentas Internas","Prioridade":"Alto","Criação":"2026-03-05"},
+{"Nome":"Configurar subdomínio blog.adaflow.com","Tipo":"Solicitação de Suporte","Feature":"Site","Status":"Done","Time":"Marketing","Produto":"Site","Prioridade":"–","Criação":"2026-03-04"},
+{"Nome":"Vinculação de pagamento no app","Tipo":"Solicitação de Suporte","Feature":"Reativação Cliente","Status":"Done","Time":"Financeiro","Produto":"BackOffice","Prioridade":"–","Criação":"2026-03-04"},
+{"Nome":"Excluir conta bancária","Tipo":"Solicitação de Suporte","Feature":"Contas Bancárias","Status":"Done","Time":"BackOffice","Produto":"WebApp","Prioridade":"Alto","Criação":"2026-03-02"},
+{"Nome":"Problema ao desativar autenticação 2 fatores","Tipo":"Solicitação de Suporte","Feature":"2FA","Status":"Done","Time":"CS","Produto":"WebApp","Prioridade":"–","Criação":"2026-02-27"},
+{"Nome":"Desabilitar autenticação de 2f app","Tipo":"Solicitação de Suporte","Feature":"2FA","Status":"Done","Time":"CS","Produto":"WebApp","Prioridade":"–","Criação":"2026-02-25"},
+{"Nome":"Ajustar regime tributário no app","Tipo":"Bug","Feature":"Cadastro Empresas","Status":"Done","Time":"CS","Produto":"BackOffice","Prioridade":"–","Criação":"2026-02-25"},
+{"Nome":"Instalação de Certificado Digital via AdaOffice","Tipo":"Bug","Feature":"Certificado Digital","Status":"Done","Time":"BackOffice","Produto":"AdaOffice","Prioridade":"Alto","Criação":"2026-03-16"},
+{"Nome":"Bug? Filtro Empresas","Tipo":"Bug","Feature":"Cadastro Empresas","Status":"Done","Time":"Product/Tech","Produto":"BackOffice","Prioridade":"Médio","Criação":"2026-03-17"},
+{"Nome":"Ajuste de informações e-mail NF","Tipo":"Melhoria","Feature":"NFSe","Status":"In-progress","Time":"CS","Produto":"WebApp","Prioridade":"Médio","Criação":"2026-03-16"},
+{"Nome":"Problema no envio de e-mail nas automações pipefy","Tipo":"Solicitação de Suporte","Feature":"Automações","Status":"Done","Time":"CS","Produto":"Pipefy","Prioridade":"Crítico","Criação":"2026-03-20"},
+{"Nome":"Erro 500 quando falha a adição de um novo tomador de serviços","Tipo":"Bug","Feature":"Tomadores","Status":"Triaged","Time":"BackOffice","Produto":"BackOffice","Prioridade":"Alto","Criação":"2026-03-19"},
+{"Nome":"Certificado Digital Mari","Tipo":"Melhoria","Feature":"AdaOffice","Status":"Triaged","Time":"BackOffice","Produto":"Ferramentas Internas","Prioridade":"Alto","Criação":"2026-03-19"},
+{"Nome":"Adacoins por indicação não debitados","Tipo":"Bug","Feature":"Adafriends","Status":"Done","Time":"CS","Produto":"WebApp","Prioridade":"Médio","Criação":"2026-03-18"},
+{"Nome":"Captação do UTM no Onboarding","Tipo":"Melhoria","Feature":"Onboarding","Status":"In-progress","Time":"Marketing","Produto":"WebApp","Prioridade":"Médio","Criação":"2026-03-11"},
+{"Nome":"Erro na home do site","Tipo":"Bug","Feature":"Site","Status":"Done","Time":"Marketing","Produto":"Site","Prioridade":"Crítico","Criação":"2026-03-17"},
+{"Nome":"Bug ao tentar conectar Open Finance","Tipo":"Bug","Feature":"Open Finance","Status":"Done","Time":"CS","Produto":"WebApp","Prioridade":"Médio","Criação":"2026-03-11"}
+];
+
+function parseDate(s){ return new Date(s+'T00:00:00'); }
+const hoje = new Date('2026-03-30');
+const diaSem = hoje.getDay();
+const diasAteLast = diaSem === 0 ? 0 : diaSem;
+const semFim = new Date(hoje); semFim.setDate(hoje.getDate() - diasAteLast);
+const semIni = new Date(semFim); semIni.setDate(semFim.getDate() - 6);
+const mesIni = new Date(2026,2,1);
+const mesFim = new Date(2026,2,31);
+const mesAntIni = new Date(2026,1,1);
+const mesAntFim = new Date(2026,1,28);
+function inRange(t,s,e){ const d=parseDate(t.Criação); return d>=s && d<=e; }
+const semTx = tickets.filter(t=>inRange(t,semIni,semFim));
+const mesTx = tickets.filter(t=>inRange(t,mesIni,mesFim));
+const mesAntTx = tickets.filter(t=>inRange(t,mesAntIni,mesAntFim));
+const allOpen = tickets.filter(t=>ABERTO(t.Status));
+function groupBy(arr,key){ const m={}; arr.forEach(t=>{ const v=t[key]||'–'; m[v]=(m[v]||0)+1; }); return m; }
+function topN(obj,n){ return Object.entries(obj).sort((a,b)=>b[1]-a[1]).slice(0,n); }
+function tagStatus(s){
+  const m={'Done':'tag-done','Ações Concluídas':'tag-acoes','In-progress':'tag-inprog','Triaged':'tag-triaged','To Do':'tag-todo','Open':'tag-open','Blocked':'tag-blocked','Backlog p/ Pitchs':'tag-backlog'};
+  return `<span class="tag ${m[s]||'tag-open'}">${s}</span>`;
+}
+function tagTipo(s){
+  const m={'Bug':'tag-bug','Melhoria':'tag-melhoria','Solicitação de Suporte':'tag-suporte','Dúvida Interna':'tag-duvida'};
+  return `<span class="tag ${m[s]||'tag-open'}">${s||'–'}</span>`;
+}
+function makeHbar(canvasId,labels,data,colors,wrapH){
+  return `<div style="position:relative;width:100%;height:${wrapH}px"><canvas id="${canvasId}"></canvas></div>`;
+}
+function initHbar(canvasId,labels,data,colors){
+  const maxV = Math.max(...data,1);
+  new Chart(document.getElementById(canvasId),{
+    type:'bar',
+    data:{labels,datasets:[{data,backgroundColor:colors,borderRadius:3,borderSkipped:false}]},
+    options:{
+      indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      layout:{padding:{right:36}},
+      scales:{x:{display:false,max:maxV*1.25,grid:{display:false}},y:{ticks:{font:{size:11},color:labelC},grid:{display:false}}},
+      plugins:{legend:{display:false},datalabels:{anchor:'end',align:'end',color:textC,font:{size:11,weight:'500'},formatter:v=>v>0?v:'',padding:{left:4}}}
+    }
+  });
+}
+function makeDonut(canvasId){
+  return `<div style="position:relative;width:100%;height:180px"><canvas id="${canvasId}"></canvas></div>`;
+}
+function initDonut(canvasId,labels,data,colors){
+  new Chart(document.getElementById(canvasId),{
+    type:'doughnut',
+    data:{labels,datasets:[{data,backgroundColor:colors,borderWidth:1,borderColor:'transparent'}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{display:false},datalabels:{display:false}}}
+  });
+}
+function legendHtml(labels,data,colors){
+  return `<div class="legend">${labels.map((l,i)=>`<span><span class="legend-dot" style="background:${colors[i%colors.length]}"></span>${l} (${data[i]})</span>`).join('')}</div>`;
+}
+function miniTable(headers,rows){
+  return `<table class="mini-table"><tr>${headers.map(h=>`<td>${h}</td>`).join('')}</tr>${rows.map(r=>`<tr>${r.map((c,i)=>`<td>${c}</td>`).join('')}</tr>`).join('')}</table>`;
+}
+const totalPlugin={id:'totals',afterDatasetsDraw(chart){
+  const{ctx,data}=chart;
+  const totals=chart.data.labels.map((_,i)=>data.datasets.reduce((a,d)=>a+(d.data[i]||0),0));
+  const meta=chart.getDatasetMeta(data.datasets.length-1);
+  ctx.save();
+  meta.data.forEach((bar,i)=>{
+    if(totals[i]>0){
+      ctx.fillStyle=textC;ctx.font='11px sans-serif';ctx.textAlign='center';
+      ctx.fillText(totals[i],bar.x,bar.y-6);
+    }
+  });
+  ctx.restore();
+}};
+
+const built={t1:false,t2:false,t3:false};
+function switchTab(id,btn){
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  if(!built[id]){ built[id]=true; if(id==='t1')buildT1(); else if(id==='t2')buildT2(); else buildT3(); }
+}
+
+function buildT1(){
+  const t=semTx;
+  const total=t.length, resolvidos=t.filter(x=>CONCLUIDO(x.Status)).length;
+  const bugs=t.filter(x=>x.Tipo==='Bug').length;
+  const criticos=allOpen.filter(x=>x.Prioridade==='Crítico').length;
+  const pendentes=t.filter(x=>!CONCLUIDO(x.Status)&&x.Status!=='Backlog p/ Pitchs');
+  const taxa=total>0?Math.round(resolvidos/total*100):0;
+  const tipoG=groupBy(t,'Tipo'), timeG=groupBy(t,'Time');
+  const tipoLabs=Object.keys(tipoG),tipoData=Object.values(tipoG);
+  const timeLabs=Object.keys(timeG),timeData=Object.values(timeG);
+  const tipoColors=tipoLabs.map(l=>TIPO_C[l]||'#888780');
+  const timeColors=timeLabs.map((_,i)=>TIME_P[i%TIME_P.length]);
+  const sortOrder=['Blocked','In-progress','To Do','Triaged','Backlog p/ Pitchs','Open'];
+  const pendSorted=[...pendentes].sort((a,b)=>{const sa=sortOrder.indexOf(a.Status),sb=sortOrder.indexOf(b.Status);if(sa!==sb)return sa-sb;return(a.Produto||'').localeCompare(b.Produto||'');});
+  const featFreq=Object.entries(groupBy(t,'Feature')).sort((a,b)=>b[1]-a[1])[0];
+  const tipoFreq=Object.entries(tipoG).sort((a,b)=>b[1]-a[1])[0];
+  let html=`<div class="kpi-grid">
+  <div class="kpi"><div class="kpi-label">Tickets abertos</div><div class="kpi-value">${total}</div><div class="kpi-sub">Semana 23–29/Mar</div></div>
+  <div class="kpi"><div class="kpi-label">Resolvidos</div><div class="kpi-value" style="color:#1D9E75">${resolvidos}</div><div class="kpi-sub">Taxa ${taxa}%</div></div>
+  <div class="kpi"><div class="kpi-label">Bugs</div><div class="kpi-value" style="color:#E24B4A">${bugs}</div><div class="kpi-sub">na semana</div></div>
+  <div class="kpi"><div class="kpi-label">Críticos abertos</div><div class="kpi-value" style="color:#A32D2D">${criticos}</div><div class="kpi-sub">no board total</div></div>
+</div>`;
+  if(criticos>0) html+=`<div class="alert alert-red">● Há <b>${criticos} ticket(s) Crítico(s)</b> em aberto no board. Atenção imediata necessária.</div>`;
+  if(pendentes.length>0) html+=`<div class="alert alert-yellow">▲ <b>${pendentes.length} ticket(s)</b> da semana ainda pendentes (não concluídos).</div>`;
+  html+=`<div class="chart-row">
+  <div class="chart-box"><div class="chart-title">Distribuição por tipo</div>${legendHtml(tipoLabs,tipoData,tipoColors)}${makeDonut('donutTipo1')}${miniTable(['Tipo','Qtd','%'],tipoLabs.map((l,i)=>[l,tipoData[i],Math.round(tipoData[i]/total*100)+'%']))}</div>
+  <div class="chart-box"><div class="chart-title">Por time solicitante</div>${legendHtml(timeLabs,timeData,timeColors)}${makeDonut('donutTime1')}${miniTable(['Time','Qtd','%'],timeLabs.map((l,i)=>[l,timeData[i],Math.round(timeData[i]/total*100)+'%']))}</div>
+</div>`;
+  if(pendSorted.length>0){
+    html+=`<div class="section-title">Pendentes da semana</div><div class="overflow-x"><table class="pending-table"><tr><th>Ticket</th><th>Tipo</th><th>Status</th><th>Time</th><th>Produto</th><th>Feature</th></tr>`;
+    pendSorted.forEach(tk=>{html+=`<tr><td style="max-width:220px;white-space:normal">${tk.Nome}</td><td>${tagTipo(tk.Tipo)}</td><td>${tagStatus(tk.Status)}</td><td>${tk.Time||'–'}</td><td>${tk.Produto||'–'}</td><td>${tk.Feature||'–'}</td></tr>`;});
+    html+=`</table></div>`;
+  }
+  html+=`<div class="highlights"><div class="hl-title">Destaques</div>
+<div class="hl-item"><b>${total}</b> tickets criados na semana — taxa de resolução de <b>${taxa}%</b></div>
+<div class="hl-item">Tipo mais frequente: <b>${tipoFreq?tipoFreq[0]:'–'}</b> (${tipoFreq?tipoFreq[1]:0} tickets)</div>
+<div class="hl-item">Feature mais demandada: <b>${featFreq?featFreq[0]:'–'}</b> (${featFreq?featFreq[1]:0} tickets)</div>
+<div class="hl-item">Críticos no board: <b>${criticos}</b></div>
+<div class="hl-item">Pendências em aberto da semana: <b>${pendentes.length}</b></div>
+</div>`;
+  document.getElementById('t1').innerHTML=html;
+  initDonut('donutTipo1',tipoLabs,tipoData,tipoColors);
+  initDonut('donutTime1',timeLabs,timeData,timeColors);
+}
+
+function buildT2(){
+  const t=mesTx, total=t.length, resolvidos=t.filter(x=>CONCLUIDO(x.Status)).length;
+  const taxa=total>0?Math.round(resolvidos/total*100):0, backlogTotal=allOpen.length;
+  function getSemanas(arr){const w={S1:[],S2:[],S3:[],S4:[]};arr.forEach(tk=>{const d=parseDate(tk.Criação).getDate();if(d<=7)w.S1.push(tk);else if(d<=14)w.S2.push(tk);else if(d<=21)w.S3.push(tk);else w.S4.push(tk);});return w;}
+  const sem=getSemanas(t), tipos=['Bug','Melhoria','Solicitação de Suporte','Dúvida Interna'];
+  const semLabels=['S1','S2','S3','S4'];
+  const semDatasets=tipos.map(tipo=>({label:tipo,data:semLabels.map(s=>sem[s].filter(x=>x.Tipo===tipo).length),backgroundColor:TIPO_C[tipo],stack:'a'}));
+  const semTotals=semLabels.map(s=>sem[s].length);
+  const tipoG=groupBy(t,'Tipo'), tipoLabs=Object.keys(tipoG), tipoData=Object.values(tipoG);
+  const tipoColors=tipoLabs.map(l=>TIPO_C[l]||'#888780');
+  const prodG=groupBy(t.filter(x=>x.Produto&&x.Produto!=='–'),'Produto');
+  const prodTop=topN(prodG,7), prodLabs=prodTop.map(x=>x[0]), prodData=prodTop.map(x=>x[1]);
+  const featG=groupBy(t.filter(x=>x.Feature&&x.Feature!=='–'),'Feature');
+  const featTop=topN(featG,10), featLabs=featTop.map(x=>x[0]), featData=featTop.map(x=>x[1]);
+  const statExclude=['Done','Ações Concluídas','Backlog p/ Pitchs'];
+  const statG=groupBy(allOpen.filter(x=>!statExclude.includes(x.Status)),'Status');
+  const statLabs=Object.keys(statG), statData=Object.values(statG), statColors=statLabs.map(l=>STAT_C[l]||'#888780');
+  const prioG=groupBy(allOpen,'Prioridade'), prioLabs=Object.keys(prioG), prioData=Object.values(prioG), prioColors=prioLabs.map(l=>PRIO_C[l]||'#888780');
+  const featFreq=featTop[0];
+  const tipoFreq=tipoLabs.reduce((a,l,i)=>tipoData[i]>(tipoG[a]||0)?l:a,tipoLabs[0]);
+  let html=`<div class="kpi-grid-2">
+  <div class="kpi"><div class="kpi-label">Taxa de resolução — Março</div><div class="kpi-value" style="color:#1D9E75">${taxa}%</div><div class="kpi-sub">${resolvidos} de ${total} resolvidos</div></div>
+  <div class="kpi"><div class="kpi-label">Backlog acumulado (board)</div><div class="kpi-value" style="color:#BA7517">${backlogTotal}</div><div class="kpi-sub">tickets não concluídos</div></div>
+</div>
+<div class="chart-box-full"><div class="chart-title">Volume semanal por tipo</div><div style="position:relative;width:100%;height:200px"><canvas id="barSem2"></canvas></div>${miniTable(['Semana','Total','Bug','Melhoria','Suporte'],semLabels.map((s,i)=>[s,semTotals[i],sem[s].filter(x=>x.Tipo==='Bug').length,sem[s].filter(x=>x.Tipo==='Melhoria').length,sem[s].filter(x=>x.Tipo==='Solicitação de Suporte').length]))}</div>
+<div class="chart-row">
+  <div class="chart-box"><div class="chart-title">Distribuição por tipo</div>${legendHtml(tipoLabs,tipoData,tipoColors)}${makeDonut('donutTipo2')}</div>
+  <div class="chart-box"><div class="chart-title">Status do board (em aberto)</div>${makeHbar('hbarStat2',statLabs,statData,statColors,statLabs.length*40+60)}</div>
+</div>
+<div class="chart-box-full"><div class="chart-title">Tickets por produto</div>${makeHbar('hbarProd2',prodLabs,prodData,prodLabs.map((_,i)=>PROD_P[i%PROD_P.length]),prodLabs.length*40+60)}</div>
+<div class="chart-box-full"><div class="chart-title">Tickets por feature (top 10)</div>${makeHbar('hbarFeat2',featLabs,featData,featLabs.map((_,i)=>FEAT_P[i%FEAT_P.length]),featLabs.length*36+60)}</div>
+<div class="chart-box-full"><div class="chart-title">Prioridade dos abertos</div>${legendHtml(prioLabs,prioData,prioColors)}${makeDonut('donutPrio2')}</div>
+<div class="highlights"><div class="hl-title">Destaques — Março 2026</div>
+<div class="hl-item"><b>${total}</b> tickets em março — resolução de <b>${taxa}%</b></div>
+<div class="hl-item">Tipo mais frequente: <b>${tipoFreq}</b> (${tipoG[tipoFreq]} tickets)</div>
+<div class="hl-item">Feature mais demandada: <b>${featFreq?featFreq[0]:'–'}</b> (${featFreq?featFreq[1]:0} tickets)</div>
+<div class="hl-item">Produto mais demandado: <b>${prodTop[0]?prodTop[0][0]:'–'}</b> (${prodTop[0]?prodTop[0][1]:0} tickets)</div>
+<div class="hl-item">Backlog acumulado: <b>${backlogTotal}</b> tickets em aberto no board</div>
+</div>`;
+  document.getElementById('t2').innerHTML=html;
+  new Chart(document.getElementById('barSem2'),{type:'bar',data:{labels:semLabels,datasets:semDatasets},options:{responsive:true,maintainAspectRatio:false,scales:{x:{stacked:true,grid:{display:false},ticks:{color:labelC,autoSkip:false}},y:{stacked:true,grid:{color:gridC},ticks:{color:labelC}}},plugins:{legend:{display:false},datalabels:{display:false}}},plugins:[totalPlugin]});
+  initDonut('donutTipo2',tipoLabs,tipoData,tipoColors);
+  initHbar('hbarStat2',statLabs,statData,statColors);
+  initHbar('hbarProd2',prodLabs,prodData,prodLabs.map((_,i)=>PROD_P[i%PROD_P.length]));
+  initHbar('hbarFeat2',featLabs,featData,featLabs.map((_,i)=>FEAT_P[i%FEAT_P.length]));
+  initDonut('donutPrio2',prioLabs,prioData,prioColors);
+}
+
+function buildT3(){
+  const ma=mesAntTx, mc=mesTx;
+  const totalMa=ma.length, totalMc=mc.length, delta=totalMc-totalMa;
+  const deltaPct=totalMa>0?Math.round(delta/totalMa*100):0, deltaSign=delta>=0?'+':'';
+  const tipos=['Bug','Melhoria','Solicitação de Suporte','Dúvida Interna'];
+  const tipoMaData=tipos.map(tp=>ma.filter(x=>x.Tipo===tp).length);
+  const tipoMcData=tipos.map(tp=>mc.filter(x=>x.Tipo===tp).length);
+  const timeMaG=groupBy(ma,'Time'), timeMcG=groupBy(mc,'Time');
+  const allTimes=[...new Set([...Object.keys(timeMaG),...Object.keys(timeMcG)])];
+  const timeMaData=allTimes.map(t=>timeMaG[t]||0), timeMcData=allTimes.map(t=>timeMcG[t]||0);
+  const featAll=[...ma,...mc];
+  const featG=groupBy(featAll.filter(x=>x.Feature&&x.Feature!=='–'),'Feature');
+  const featTop=topN(featG,8), featLabs=featTop.map(x=>x[0]), featData=featTop.map(x=>x[1]);
+  const prodAll=[...ma,...mc];
+  const prodG=groupBy(prodAll.filter(x=>x.Produto&&x.Produto!=='–'),'Produto');
+  const prodTop=topN(prodG,7), prodLabs=prodTop.map(x=>x[0]), prodData=prodTop.map(x=>x[1]);
+  const alertText=delta>=0?`De fevereiro para março, o volume cresceu <b>${delta}</b> tickets (${deltaSign}${deltaPct}%). Março está com <b>${totalMc}</b> tickets contra <b>${totalMa}</b> em fevereiro.`:`De fevereiro para março, o volume reduziu <b>${Math.abs(delta)}</b> tickets (${deltaSign}${deltaPct}%). Março está com <b>${totalMc}</b> tickets contra <b>${totalMa}</b> em fevereiro.`;
+  const featFreq=featTop[0];
+  const tipoMcFreq=tipos.reduce((a,b)=>mc.filter(x=>x.Tipo===b).length>mc.filter(x=>x.Tipo===a).length?b:a,tipos[0]);
+  let html=`<div class="kpi-grid">
+  <div class="kpi"><div class="kpi-label">Total fevereiro</div><div class="kpi-value">${totalMa}</div></div>
+  <div class="kpi"><div class="kpi-label">Total março</div><div class="kpi-value">${totalMc}</div></div>
+  <div class="kpi"><div class="kpi-label">Variação absoluta</div><div class="kpi-value ${delta>=0?'var-pos':'var-neg'}">${deltaSign}${delta}</div></div>
+  <div class="kpi"><div class="kpi-label">Variação %</div><div class="kpi-value ${deltaPct>=0?'var-pos':'var-neg'}">${deltaSign}${deltaPct}%</div></div>
+</div>
+<div class="alert alert-blue">ℹ ${alertText}</div>
+<div class="chart-box-full"><div class="chart-title">Volume por mês</div><div style="position:relative;width:100%;height:180px"><canvas id="barMes3"></canvas></div></div>
+<div class="chart-box-full"><div class="chart-title">Top features (acumulado)</div>${makeHbar('hbarFeat3',featLabs,featData,featLabs.map((_,i)=>FEAT_P[i%FEAT_P.length]),featLabs.length*36+60)}</div>
+<div class="chart-box-full"><div class="chart-title">Top produtos (acumulado)</div>${makeHbar('hbarProd3',prodLabs,prodData,prodLabs.map((_,i)=>PROD_P[i%PROD_P.length]),prodLabs.length*38+60)}</div>
+<div class="chart-box-full"><div class="chart-title">Por tipo — fevereiro vs março</div>${legendHtml(['Fevereiro','Março'],['',''],['#888780','#185FA5'])}<div style="position:relative;width:100%;height:180px"><canvas id="barTipo3"></canvas></div>${miniTable(['Tipo','Fev','Mar','Δ','Δ%'],tipos.map((tp,i)=>{const d=tipoMcData[i]-tipoMaData[i];const pct=tipoMaData[i]>0?Math.round(d/tipoMaData[i]*100):0;return[tp,tipoMaData[i],tipoMcData[i],`<span class="${d>=0?'var-pos':'var-neg'}">${d>=0?'+':''}${d}</span>`,`<span class="${pct>=0?'var-pos':'var-neg'}">${pct>=0?'+':''}${pct}%</span>`]}))}</div>
+<div class="chart-box-full"><div class="chart-title">Por time — fevereiro vs março</div><div style="position:relative;width:100%;height:200px"><canvas id="barTime3"></canvas></div>${miniTable(['Time','Fev','Mar','Δ'],allTimes.map((t,i)=>{const d=timeMcData[i]-timeMaData[i];return[t,timeMaData[i],timeMcData[i],`<span class="${d>=0?'var-pos':'var-neg'}">${d>=0?'+':''}${d}</span>`]}))}</div>
+<div class="highlights"><div class="hl-title">Destaques comparativos</div>
+<div class="hl-item">Volume: <b>fevereiro ${totalMa}</b> → <b>março ${totalMc}</b> (<span class="${delta>=0?'var-pos':'var-neg'}">${deltaSign}${delta}</span>)</div>
+<div class="hl-item">Feature mais demandada (acumulado): <b>${featFreq?featFreq[0]:'–'}</b> (${featFreq?featFreq[1]:0})</div>
+<div class="hl-item">Tipo mais frequente em março: <b>${tipoMcFreq}</b></div>
+</div>`;
+  document.getElementById('t3').innerHTML=html;
+  new Chart(document.getElementById('barMes3'),{type:'bar',data:{labels:['Fevereiro 2026','Março 2026'],datasets:tipos.map(tp=>({label:tp,data:[ma.filter(x=>x.Tipo===tp).length,mc.filter(x=>x.Tipo===tp).length],backgroundColor:TIPO_C[tp],stack:'a'}))},options:{responsive:true,maintainAspectRatio:false,scales:{x:{stacked:true,grid:{display:false},ticks:{color:labelC,autoSkip:false}},y:{stacked:true,grid:{color:gridC},ticks:{color:labelC}}},plugins:{legend:{display:false},datalabels:{display:false}}},plugins:[totalPlugin]});
+  initHbar('hbarFeat3',featLabs,featData,featLabs.map((_,i)=>FEAT_P[i%FEAT_P.length]));
+  initHbar('hbarProd3',prodLabs,prodData,prodLabs.map((_,i)=>PROD_P[i%PROD_P.length]));
+  new Chart(document.getElementById('barTipo3'),{type:'bar',data:{labels:tipos.map(t=>t==='Solicitação de Suporte'?'Suporte':t),datasets:[{label:'Fevereiro',data:tipoMaData,backgroundColor:'#888780'},{label:'Março',data:tipoMcData,backgroundColor:'#185FA5'}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{display:false},ticks:{color:labelC,autoSkip:false,maxRotation:0}},y:{grid:{color:gridC},ticks:{color:labelC}}},plugins:{legend:{display:false},datalabels:{display:false}}}});
+  new Chart(document.getElementById('barTime3'),{type:'bar',data:{labels:allTimes,datasets:[{label:'Fevereiro',data:timeMaData,backgroundColor:'#888780'},{label:'Março',data:timeMcData,backgroundColor:'#185FA5'}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{display:false},ticks:{color:labelC,autoSkip:false,maxRotation:30,font:{size:10}}},y:{grid:{color:gridC},ticks:{color:labelC}}},plugins:{legend:{display:false},datalabels:{display:false}}}});
+}
+
+built['t1']=true; buildT1();
+</script>
+</body>
+</html>
